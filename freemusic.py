@@ -1,77 +1,78 @@
 import re
-import customtkinter as ctk
 import tkinter.messagebox
+
+import customtkinter as ctk
 import yt_dlp
 
-class FreeMusic:
+
+class FreeMusicApp:
+    """
+    Aplicação para instalar músicas do Youtube via sua URL.
+    Pode escolher entre música individual ou playlist.
+    """
+    # Expressões regulares para verificar uma URL de vídeo ou Playlist
+    VIDEO_URL_PATTERN = r"^(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11})(?:\S+)?$"
+    PLAYLIST_URL_PATTERN = r"^(?:https?://)?(?:www\.)?youtube\.com/playlist\?list=([\w-]+)(?:\S+)?$"
+
     def __init__(self):
-        
-        ## Propriedades da Janela
-        self.janela = ctk.CTk() 
+        self.janela = ctk.CTk()
         self.janela.title("FreeMusic")
         self.janela.geometry("344x120")
         self.janela.configure(fg_color="#599191")
         self.janela.resizable(False, False)
-        self.janela.wm_iconbitmap = "imagens/ico.ico"
-        
-        ## Label URL
+        self.janela.wm_iconbitmap = "./imagens/ico.ico"
+
         self.label_url = ctk.CTkLabel(self.janela, text="URL:")
         self.label_url.grid(row=0, column=0, padx=10, pady=5)
 
-        ## Input URL
         self.input_text = ctk.CTkEntry(self.janela, width=250)
         self.input_text.grid(row=0, column=1, padx=10, pady=5)
 
-        ## Botão Download
         self.download_button = ctk.CTkButton(self.janela, text="Instalar", command=self.on_download_button_click, fg_color="black")
         self.download_button.grid(row=1, column=1, pady=5)
 
-        ## Checkbox Playlist
         self.playlist_checkbox = ctk.CTkCheckBox(self.janela, text="Playlist?")
         self.playlist_checkbox.grid(row=2, column=1, pady=1)
 
     def executar(self):
+        """
+        Roda o programa
+        """
         self.janela.mainloop()
 
-    def download(self, video_url: str, playlist: bool, output_path: str):
+    def download(self, video_url: str, playlist: str, output_path: str):
         """
+        Faz o download de um vídeo ou playlist do YouTube como música.
+
         Argumentos:
-            video_url: string (pode ser video ou playlist)
-            playlist: booleano (pode ser true ou false, se é uma playlist.)
-            output_path: string (localizacao da pasta saida)
+            video_url (str): URL do vídeo ou playlist.
+            playlist (bool): Define se é uma playlist ou não.
+            output_path (str): Caminho da pasta de saída.
         """
-        
-        # Configurações do YoutubeDL para música
-        as_song_opt = {
-            'outtmpl': output_path + '/%(title)s.%(ext)s', 
-            # Saida: nome da pasta + titulo + extensão.
+        # Opções para o YouTubeDL ao baixar como música individual
+        song_options = {
+            'outtmpl': output_path + '/%(title)s.%(ext)s',
             'format': 'bestaudio/best',
-            # Melhor formato!
-            
-            # Processamento
-            'postprocessors': [{
-                'key': 'FFmpegExtractAudio', # extrair audio com ffmpeg 
-                'preferredcodec': 'mp3', # extensão
-                'preferredquality': '192', # qualidade
-            }],
+            'postprocessors': [
+                {
+                    'key': 'FFmpegExtractAudio',
+                    'preferredcodec': 'mp3',
+                    'preferredquality': '192',
+                }
+            ],
         }
+        # Opções para o YouTubeDL ao baixar uma playlist
+        playlist_options = {'extract_flat': True}
 
-        # Configurações do YoutubeDL para playlist
-        playlist_opt = {
-            'extract_flat': True # tratar como lista
-        }
-
-        # Instala com YTDL
-        with yt_dlp.YoutubeDL(as_song_opt) as ydl:
+        with yt_dlp.YoutubeDL(song_options) as ydl:
             if not playlist:
-                inf = ydl.extract_info(video_url, download=False)
+                info = ydl.extract_info(video_url, download=False)
                 ydl.download([video_url])
-                tkinter.messagebox.showinfo("Instalação completa!", f"Música instalada: {inf['title']}")
-
+                tkinter.messagebox.showinfo("Instalação completa!", f"Música instalada: {info['title']}")
 
             if playlist:
-                def as_playlist(playlist_url: str):
-                    with yt_dlp.YoutubeDL(playlist_opt) as ydl_playlist:
+                def download_playlist(playlist_url):
+                    with yt_dlp.YoutubeDL(playlist_options) as ydl_playlist:
                         playlist_info = ydl_playlist.extract_info(playlist_url, download=False)
                         if 'entries' in playlist_info:
                             for entry in playlist_info['entries']:
@@ -79,34 +80,26 @@ class FreeMusic:
                                     video_url = entry['url']
                                     self.download(video_url, playlist=False, output_path=output_path)
 
-                as_playlist(video_url)
+                download_playlist(video_url)
 
     def on_download_button_click(self):
-
-     
+        """
+        Função chamada após clique no botão download
+        """
         context_url = self.input_text.get()
         is_playlist = self.playlist_checkbox.get()
-
-        # Video URL
-        video_url_pattern = r"^(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11})(?:\S+)?$"
-
-        # Playlist URL
-        playlist_url_pattern = r"^(?:https?://)?(?:www\.)?youtube\.com/playlist\?list=([\w-]+)(?:\S+)?$"
 
         if not context_url:
             tkinter.messagebox.showinfo("Erro!", "Favor insira um link do YT!")
             return
-        
-        if context_url:
-            if is_playlist:
-                if not re.findall(playlist_url_pattern, context_url):
-                    tkinter.messagebox.showinfo("Erro!", "Este link não é uma playlist!")
-                    return
-            
-            if not is_playlist:
-                if not re.findall(video_url_pattern, context_url):
-                    tkinter.messagebox.showinfo("Erro!", "Este link não é um vídeo do YT!")
-                    return
+
+        if is_playlist and not re.findall(self.PLAYLIST_URL_PATTERN, context_url):
+            tkinter.messagebox.showinfo("Erro!", "Este link não é uma playlist!")
+            return
+
+        if not is_playlist and not re.findall(self.VIDEO_URL_PATTERN, context_url):
+            tkinter.messagebox.showinfo("Erro!", "Este link não é um vídeo do YT!")
+            return
 
         output_path = ctk.filedialog.askdirectory()
 
@@ -114,5 +107,6 @@ class FreeMusic:
             self.download(context_url, is_playlist, output_path)
         
 if __name__ == "__main__":
-    msc = FreeMusic()
+    # Cria uma instância FreeMusicApp e inicia o app
+    msc = FreeMusicApp()
     msc.executar()
