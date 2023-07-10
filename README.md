@@ -1,2 +1,4 @@
+
 # Projeto Python "Free Music" SENAI Anchieta
-## Feito por: Emilaine Briet, Leticia Garcia e Lucas Costa
+![Imagem](imagens/preview.png)
+- feito por: Emilaine Briet, Leticia Garcia e Lucas Costa
