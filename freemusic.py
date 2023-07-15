@@ -1,9 +1,10 @@
+from threading import Thread
+
 import re
 import tkinter.messagebox
 
 import customtkinter as ctk
 import yt_dlp
-
 
 class FreeMusicApp:
     """
@@ -20,7 +21,7 @@ class FreeMusicApp:
         self.janela.geometry("344x120")
         self.janela.configure(fg_color="#599191")
         self.janela.resizable(False, False)
-        self.janela.wm_iconbitmap = "./imagens/ico.ico"
+        self.janela.iconbitmap("imagens/ico.ico")
 
         self.label_url = ctk.CTkLabel(self.janela, text="URL:")
         self.label_url.grid(row=0, column=0, padx=10, pady=5)
@@ -28,11 +29,19 @@ class FreeMusicApp:
         self.input_text = ctk.CTkEntry(self.janela, width=250)
         self.input_text.grid(row=0, column=1, padx=10, pady=5)
 
-        self.download_button = ctk.CTkButton(self.janela, text="Instalar", command=self.on_download_button_click, fg_color="black")
+        self.download_button = ctk.CTkButton(self.janela, text="Instalar", command=self.threading, fg_color="black")
         self.download_button.grid(row=1, column=1, pady=5)
 
         self.playlist_checkbox = ctk.CTkCheckBox(self.janela, text="Playlist?")
         self.playlist_checkbox.grid(row=2, column=1, pady=1)
+
+    def threading(self):
+        """
+        Thread pra separar processos
+        """
+        thread_one = Thread(target=self.on_download_button_click)
+        thread_one.start()
+
 
     def executar(self):
         """
@@ -104,7 +113,9 @@ class FreeMusicApp:
         output_path = ctk.filedialog.askdirectory()
 
         if output_path:
-            self.download(context_url, is_playlist, output_path)
+           self.download(context_url, is_playlist, output_path)        
+
+
         
 if __name__ == "__main__":
     # Cria uma instância FreeMusicApp e inicia o app
