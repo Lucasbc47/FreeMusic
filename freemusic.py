@@ -66,7 +66,6 @@ class FreeMusicApp:
         """
         self.janela.mainloop()
 
-    @staticmethod
     def download(self, video_url: str, playlist: str, output_path: str):
         """
         Faz o download de um vídeo ou playlist do YouTube como música.
