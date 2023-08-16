@@ -1,15 +1,25 @@
+import os
+import re
+
 from threading import Thread
 
-import re
+import customtkinter as ctk
 import tkinter.messagebox
 
-import customtkinter as ctk
 import yt_dlp
+
 
 class FreeMusicApp:
     """
     Aplicação para instalar músicas do Youtube via sua URL.
     Pode escolher entre música individual ou playlist.
+
+    - Autores: 
+    Emilaine Briet,
+    Letícia Garcia e
+    Lucas Costa
+
+    - Feito com youtube-dl e customtkinter
     """
     # Expressões regulares para verificar uma URL de vídeo ou Playlist
     VIDEO_URL_PATTERN = r"^(?:https?://)?(?:www\.)?(?:youtube\.com/watch\?v=|youtu\.be/)([\w-]{11})(?:\S+)?$"
@@ -21,7 +31,14 @@ class FreeMusicApp:
         self.janela.geometry("344x120")
         self.janela.configure(fg_color="#599191")
         self.janela.resizable(False, False)
-        self.janela.iconbitmap("imagens/ico.ico")
+
+        if os.name == "nt":
+            """
+            Verifica se o dispositivo é Windows
+            Linha adicionada para evitar erros
+            ao colocar icone em outros dispostivos.
+            """
+            self.janela.iconbitmap("imagens/ico.ico")  
 
         self.label_url = ctk.CTkLabel(self.janela, text="URL:")
         self.label_url.grid(row=0, column=0, padx=10, pady=5)
@@ -38,10 +55,10 @@ class FreeMusicApp:
     def threading(self):
         """
         Thread pra separar processos
+        E evitar que o app fique crashando
         """
         thread_one = Thread(target=self.on_download_button_click)
         thread_one.start()
-
 
     def executar(self):
         """
@@ -49,6 +66,7 @@ class FreeMusicApp:
         """
         self.janela.mainloop()
 
+    @staticmethod
     def download(self, video_url: str, playlist: str, output_path: str):
         """
         Faz o download de um vídeo ou playlist do YouTube como música.
@@ -116,8 +134,8 @@ class FreeMusicApp:
            self.download(context_url, is_playlist, output_path)        
 
 
-        
 if __name__ == "__main__":
     # Cria uma instância FreeMusicApp e inicia o app
+    # com o metodo executar()
     msc = FreeMusicApp()
     msc.executar()
